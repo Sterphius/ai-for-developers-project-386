@@ -1,0 +1,80 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-calendar}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-calendar}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate-up:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-calendar}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ./migrations:/migrations:ro
+    command: ["psql", "-v", "ON_ERROR_STOP=1", "-f", "/migrations/001_init.sql"]
+
+  migrate-down:
+    image: postgres:16-alpine
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-calendar}
+      PGUSER: ${POSTGRES_USER:-postgres}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - ./migrations:/migrations:ro
+    command: ["psql", "-v", "ON_ERROR_STOP=1", "-f", "/migrations/001_down.sql"]
+
+  openapi:
+    image: node:22-alpine
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      npm exec --yes --package=@typespec/compiler --package=@typespec/openapi3 --
+      tsp compile main.tsp
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate-up:
+        condition: service_completed_successfully
+    environment:
+      LISTEN_ADDR: ${LISTEN_ADDR:-:8080}
+      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@db:5432/calendar?sslmode=disable}
+      OWNER_ID: ${OWNER_ID:-owner-1}
+      WINDOW_DAYS: ${WINDOW_DAYS:-14}
+      WORKING_DAY_START_HOUR: ${WORKING_DAY_START_HOUR:-9}
+      WORKING_DAY_END_HOUR: ${WORKING_DAY_END_HOUR:-18}
+      SLOT_STEP_MINUTES: ${SLOT_STEP_MINUTES:-30}
+      TIMEZONE: ${TIMEZONE:-UTC}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  postgres-data:
