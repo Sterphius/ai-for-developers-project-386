@@ -1,9 +1,9 @@
 # AGENTS.md
 
-Calendar booking service. Two active subprojects, each its own package:
+Calendar booking service. Three subprojects, each its own package:
 - `calendar-booking-spec/` — TypeSpec contract, compiled to OpenAPI. Source of truth for the API.
 - `web/` — React + Vite + TS frontend; its API types are generated from the contract.
-- `server/` — Go backend, planned but not yet implemented.
+- `server/` — Go backend (own module `calendar-booking/server`), in-memory store, no DB, data resets on restart.
 
 ## Contract → codegen pipeline (key workflow)
 
@@ -22,6 +22,13 @@ The contract drives the frontend types. After editing the API, rebuild then rege
 - `npm run build` — `tsc && vite build`.
 
 Dev data flow: run `mock` and `dev` together. `VITE_API_BASE_URL` (`.env.development` → :4010) points the client at the Prism mock; switch the env var to the real backend without code changes.
+
+## server/ commands
+
+- `go run ./cmd/server` — backend on :8080, CORS allows :5173. Seeds two event types + owner; bookings start empty.
+- `go test ./...` — unit tests for store (business rules) and slots (grid). No DB or external services needed.
+- Business rules live in `internal/store`; handlers stay thin. The 14-day grid is anchored to `slots.WindowStart` (now rounded up to the minute) so slot generation and booking validation agree.
+- Point the frontend at it via `web/.env.development` → `VITE_API_BASE_URL=http://localhost:8080`.
 
 ## Conventions / quirks
 
