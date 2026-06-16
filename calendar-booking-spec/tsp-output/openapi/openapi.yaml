@@ -272,6 +272,31 @@ paths:
                   $ref: '#/components/schemas/EventType'
       tags:
         - Public
+  /api/event-types/{id}:
+    get:
+      operationId: Public_getEventType
+      description: Получить тип события по id (публично, для страницы бронирования гостя).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventType'
+        '404':
+          description: 404 Not Found — тип события (или бронирование) не найдены.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - Public
   /api/event-types/{id}/slots:
     get:
       operationId: Public_getSlots

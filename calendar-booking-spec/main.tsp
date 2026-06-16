@@ -237,6 +237,13 @@ namespace Public {
   op listEventTypes(): EventType[];
 
   /**
+   * Получить тип события по id (публично, для страницы бронирования гостя).
+   */
+  @route("/event-types/{id}")
+  @get
+  op getEventType(@path id: string): EventType | NotFoundError;
+
+  /**
    * Свободные слоты для выбранного типа события.
    *
    * Бизнес-правила:
