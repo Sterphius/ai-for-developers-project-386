@@ -40,7 +40,7 @@ test.describe("Гость — бронирование", () => {
     await page.fill("#guestEmail", guestEmail);
     await page.getByRole("button", { name: "Забронировать" }).click();
 
-    await page.waitForURL(`**/book/${seededId}/success`);
+    await expect(page).toHaveURL(/\/book\/intro-call\/success$/, { timeout: 15000 });
     await expect(page.getByText("Встреча забронирована")).toBeVisible();
     await expect(page.getByText(guestName)).toBeVisible();
     await expect(page.getByText(guestEmail)).toBeVisible();

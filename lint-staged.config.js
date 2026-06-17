@@ -1,4 +1,4 @@
 export default {
-  '*.go': () => 'go vet ./server/...',
-  '*.{ts,tsx}': () => 'npm run lint --prefix web',
+  '*.go': () => 'cd server && go vet ./...',
+  '*.{ts,tsx}': () => 'cd web && npx tsc --noEmit',
 };

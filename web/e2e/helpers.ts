@@ -103,13 +103,10 @@ export function futureSlotMinutes(
 ): string {
   const now = new Date();
 
-  // WindowStart(now) — round up to next minute (mirrors server logic).
+  // WindowStart(now) — truncate to current minute (mirrors server logic).
   const ws = new Date(now);
   ws.setUTCSeconds(0);
   ws.setUTCMilliseconds(0);
-  if (ws.getTime() < now.getTime()) {
-    ws.setUTCMinutes(ws.getUTCMinutes() + 1);
-  }
 
   // Target: now + minutesFromNow
   const target = new Date(now.getTime() + minutesFromNow * 60_000);

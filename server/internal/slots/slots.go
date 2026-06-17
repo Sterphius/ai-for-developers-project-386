@@ -11,18 +11,20 @@ import (
 const WindowDays = 14
 
 // gridUnit is the granularity the window start is snapped to. Snapping to the
-// minute gives a stable grid origin across requests (sub-second jitter in "now"
-// would otherwise make slot generation and booking validation disagree).
+// minute eliminates sub-second jitter in "now" across requests.
 const gridUnit = time.Minute
 
-// WindowStart returns the grid origin: now rounded up to the next minute.
-// This is the earliest bookable instant and the anchor for grid alignment.
+// WindowStart returns the start of the booking window: now truncated to the
+// current minute. Past-slot checks are done separately via InWindow.
 func WindowStart(now time.Time) time.Time {
-	t := now.UTC().Truncate(gridUnit)
-	if t.Before(now.UTC()) {
-		t = t.Add(gridUnit)
-	}
-	return t
+	return now.UTC().Truncate(gridUnit)
+}
+
+// GridOrigin returns a round time anchor for grid alignment: the start of the
+// current UTC day. All slots align to step boundaries from this origin.
+func GridOrigin(now time.Time) time.Time {
+	n := now.UTC()
+	return time.Date(n.Year(), n.Month(), n.Day(), 0, 0, 0, 0, time.UTC)
 }
 
 // WindowEnd returns the end of the booking window: WindowStart + 14 days.
@@ -31,16 +33,15 @@ func WindowEnd(now time.Time) time.Time {
 }
 
 // IsAligned reports whether start sits on the grid: a whole number of steps
-// from the window start and not before it.
+// from the grid origin and not before the window start.
 func IsAligned(start, now time.Time, step time.Duration) bool {
 	if step <= 0 {
 		return false
 	}
-	ws := WindowStart(now)
-	if start.Before(ws) {
+	if start.Before(WindowStart(now)) {
 		return false
 	}
-	delta := start.Sub(ws)
+	delta := start.Sub(GridOrigin(now))
 	return delta%step == 0
 }
 
@@ -69,6 +70,7 @@ func Generate(et model.EventType, bookings []model.Booking, now time.Time, from,
 
 	windowStart := WindowStart(now)
 	windowEnd := WindowEnd(now)
+	gridOrigin := GridOrigin(now)
 
 	rangeStart := windowStart
 	if from != nil && from.After(rangeStart) {
@@ -79,18 +81,14 @@ func Generate(et model.EventType, bookings []model.Booking, now time.Time, from,
 		rangeEnd = *to
 	}
 
-	// Align the first slot up to a grid boundary relative to windowStart.
-	first := windowStart
-	if rangeStart.After(windowStart) {
-		delta := rangeStart.Sub(windowStart)
-		steps := delta / step
-		if delta%step != 0 {
-			steps++
-		}
-		first = windowStart.Add(steps * step)
+	// Snap the first slot up to the next grid boundary from the round origin.
+	first := rangeStart
+	delta := first.Sub(gridOrigin)
+	if delta%step != 0 {
+		steps := delta/step + 1
+		first = gridOrigin.Add(steps * step)
 	}
 
-	// Pre-filter bookings to those relevant to this event type's grid.
 	var slots []model.Slot
 	for s := first; !s.Add(step).After(rangeEnd); s = s.Add(step) {
 		end := s.Add(step)
