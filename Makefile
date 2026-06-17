@@ -1,56 +1,34 @@
-SHELL := /bin/sh
+.DEFAULT_GOAL := run
 
-COMPOSE ?= docker compose
+.PHONY: run
+.PHONY: server
+.PHONY: web
+.PHONY: build
+.PHONY: gen-api
+.PHONY: test
+.PHONY: test-e2e
 
-.PHONY: help up down logs ps build run test fmt tidy openapi migrate-up migrate-down
+run:                     ## Run both backend and frontend (Ctrl+C kills both)
+	@echo "Starting Go backend on :8080 ..."
+	cd server && go run ./cmd/server &
+	@sleep 1
+	@echo "Starting Vite dev server on :5173 ..."
+	cd web && npm run dev; kill $$! 2>/dev/null || true
 
-help:
-	@printf '%s\n' \
-		'up           Start PostgreSQL, run migrations, and launch the API' \
-		'down         Stop containers and remove the database volume' \
-		'logs         Follow compose logs' \
-		'ps           Show compose services' \
-		'build        Build the Go API locally' \
-		'run          Run the Go API locally' \
-		'test         Run Go tests' \
-		'fmt          Format Go sources with gofmt' \
-		'tidy         Update Go module metadata' \
-		'openapi      Generate openapi/openapi.yaml through TypeSpec' \
-		'migrate-up   Apply PostgreSQL migrations through Compose' \
-		'migrate-down Roll back PostgreSQL migrations through Compose'
+server:                   ## Start Go backend on :8080
+	cd server && go run ./cmd/server
 
-up:
-	$(COMPOSE) up -d db migrate-up app
+web:                      ## Start Vite dev server on :5173
+	cd web && npm run dev
 
-down:
-	$(COMPOSE) down -v --remove-orphans
+build: gen-api            ## Build everything (spec → OpenAPI → frontend types)
 
-logs:
-	$(COMPOSE) logs -f app db
+gen-api:                  ## Regenerate frontend types from TypeSpec contract
+	cd calendar-booking-spec && npm run build
+	cd web && npm run gen:api
 
-ps:
-	$(COMPOSE) ps
+test:                     ## Run Go unit tests
+	cd server && go test ./...
 
-build:
-	go build ./cmd/api
-
-run:
-	go run ./cmd/api
-
-test:
-	go test ./...
-
-fmt:
-	gofmt -w $$(find cmd internal -name '*.go' -type f)
-
-tidy:
-	go mod tidy
-
-openapi:
-	$(COMPOSE) run --rm openapi
-
-migrate-up:
-	$(COMPOSE) run --rm migrate-up
-
-migrate-down:
-	$(COMPOSE) run --rm migrate-down
+test-e2e:                 ## Run Playwright E2E tests (builds frontend, runs BE + Vite preview)
+	cd web && npm run test:e2e
