@@ -103,19 +103,19 @@ export function futureSlotMinutes(
 ): string {
   const now = new Date();
 
-  // WindowStart(now) — truncate to current minute (mirrors server logic).
-  const ws = new Date(now);
-  ws.setUTCSeconds(0);
-  ws.setUTCMilliseconds(0);
+  // GridOrigin(now) — start of current UTC day (mirrors server logic).
+  const gridOrigin = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0),
+  );
 
   // Target: now + minutesFromNow
   const target = new Date(now.getTime() + minutesFromNow * 60_000);
 
   // First grid boundary >= target
   const stepMs = durationMinutes * 60_000;
-  const diff = target.getTime() - ws.getTime();
+  const diff = target.getTime() - gridOrigin.getTime();
   const steps = Math.ceil(diff / stepMs);
-  return new Date(ws.getTime() + steps * stepMs).toISOString();
+  return new Date(gridOrigin.getTime() + steps * stepMs).toISOString();
 }
 
 // ---------------------------------------------------------------------------
