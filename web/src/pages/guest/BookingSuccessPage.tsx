@@ -97,7 +97,7 @@ function Row({
         {icon}
         {label}
       </span>
-      <span className="text-right font-medium">{children}</span>
+      <span className="min-w-0 break-words text-right font-medium">{children}</span>
     </div>
   );
 }

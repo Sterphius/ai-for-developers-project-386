@@ -11,7 +11,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-8 text-center sm:py-16">
       <Inbox className="mb-3 h-10 w-10 text-muted-foreground" />
       <p className="font-medium">{title}</p>
       {description && (

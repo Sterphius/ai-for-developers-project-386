@@ -22,7 +22,7 @@ export function EventTypesPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Выберите вид встречи</h1>
+        <h1 className="text-xl font-bold md:text-2xl">Выберите вид встречи</h1>
         <p className="mt-1 text-muted-foreground">
           Доступная запись на ближайшие 14 дней.
         </p>
@@ -43,14 +43,14 @@ export function EventTypesPage() {
           <Card key={et.id} className="flex flex-col">
             <CardHeader>
               <div className="flex items-start justify-between gap-2">
-                <CardTitle>{et.title}</CardTitle>
+                <CardTitle className="truncate">{et.title}</CardTitle>
                 <Badge variant="secondary" className="shrink-0 gap-1">
                   <Clock className="h-3 w-3" />
                   {formatDuration(et.durationMinutes)}
                 </Badge>
               </div>
               {et.description && (
-                <CardDescription>{et.description}</CardDescription>
+                <CardDescription className="line-clamp-2">{et.description}</CardDescription>
               )}
             </CardHeader>
             <CardContent className="flex-1" />

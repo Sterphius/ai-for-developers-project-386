@@ -137,7 +137,7 @@ export function BookingPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Button asChild variant="ghost" size="sm" className="mb-4 -ml-2">
+      <Button asChild variant="ghost" size="sm" className="mb-4">
         <Link to="/">
           <ArrowLeft className="h-4 w-4" />
           К списку встреч
