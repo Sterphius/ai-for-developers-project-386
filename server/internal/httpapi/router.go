@@ -35,5 +35,8 @@ func (s *Server) Handler(corsOrigin string) http.Handler {
 	mux.HandleFunc("DELETE /api/admin/bookings/{id}", s.deleteBooking)
 	mux.HandleFunc("GET /api/admin/owner", s.getOwner)
 
-	return recoverPanic(logRequests(cors(corsOrigin, mux)))
+	root := http.NewServeMux()
+	root.Handle("/api/", recoverPanic(logRequests(cors(corsOrigin, mux))))
+	root.Handle("/", staticHandler())
+	return root
 }
