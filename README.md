@@ -3,6 +3,8 @@
 Сервис для записи на консультации и встречи. Гость выбирает свободный слот из
 14-дневного календаря, владелец управляет типами событий и видит список броней.
 
+## Hexlet tests and linter status
+
 [![Actions Status](https://github.com/Sterphius/ai-for-developers-project-386/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Sterphius/ai-for-developers-project-386/actions)
 
 ## Архитектура
