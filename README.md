@@ -57,7 +57,7 @@ cd web && npm run test:e2e   # Playwright E2E
 
 | Событие | Workflow | Действие |
 |---|---|---|
-| `pull_request` в `main` | `ci.yml` | `go test ./...` + `npm ci && npx tsc --noEmit` |
+| `pull_request` в `main` | `ci.yml` | `go test ./...` + `npx tsc --noEmit` + Playwright E2E |
 | `push` в `main` | `release-please.yml` | Создаёт Release PR с `CHANGELOG.md` |
 | Мерж Release PR | `release-please.yml` | GitHub Release + git-тег `vX.Y.Z` |
 
