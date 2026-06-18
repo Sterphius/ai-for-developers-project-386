@@ -1,8 +1,9 @@
 import createClient from "openapi-fetch";
 import type { components, paths } from "./schema";
 
-export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4010";
+const envBase = import.meta.env.VITE_API_BASE_URL;
+// В production (без VITE_API_BASE_URL) — относительные URL, тот же origin.
+export const API_BASE_URL = envBase || "";
 
 export const api = createClient<paths>({ baseUrl: API_BASE_URL });
 
