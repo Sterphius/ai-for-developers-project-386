@@ -19,5 +19,5 @@ jobs:
       - run: go test ./...
         working-directory: server
 
-      - run: npm ci && npm run lint
+      - run: npm install && npm run lint
         working-directory: web
