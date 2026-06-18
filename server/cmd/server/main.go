@@ -18,7 +18,11 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "HTTP listen address")
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	addr := flag.String("addr", ":"+port, "HTTP listen address")
 	corsOrigin := flag.String("cors-origin", "http://localhost:5173", "allowed CORS origin (frontend)")
 	flag.Parse()
 

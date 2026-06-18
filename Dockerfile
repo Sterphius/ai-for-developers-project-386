@@ -1,22 +1,17 @@
-FROM golang:1.25-alpine AS build
+FROM node:22-alpine AS frontend
+WORKDIR /web
+COPY web/ .
+RUN npm install && npm run build
 
+FROM golang:1.25-alpine AS backend
+RUN apk add --no-cache git
 WORKDIR /src
-
-RUN apk add --no-cache ca-certificates git
-
-COPY . .
-
-RUN CGO_ENABLED=0 go build -o /out/api ./cmd/api
+COPY server/ .
+COPY --from=frontend /web/dist ./internal/httpapi/static
+RUN CGO_ENABLED=0 go build -o /out/server ./cmd/server
 
 FROM alpine:3.20
-
 RUN apk add --no-cache ca-certificates
-
-WORKDIR /app
-
-COPY --from=build /out/api /usr/local/bin/api
-COPY --from=build /src/openapi /app/openapi
-
+COPY --from=backend /out/server /usr/local/bin/server
 EXPOSE 8080
-
-ENTRYPOINT ["/usr/local/bin/api"]
+ENTRYPOINT ["/usr/local/bin/server"]
