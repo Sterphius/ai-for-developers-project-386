@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
-import { Trash2, User, Mail } from "lucide-react";
+import {
+  CalendarDays,
+  ListChecks,
+  LayoutGrid,
+  Trash2,
+  User,
+  Mail,
+} from "lucide-react";
 import type { Booking } from "@/api/client";
 import {
   useAdminBookings,
@@ -8,7 +15,7 @@ import {
 } from "@/api/hooks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { EmptyState } from "@/components/EmptyState";
 import { Spinner } from "@/components/Spinner";
@@ -51,6 +58,25 @@ export function BookingsPage() {
     }
   }
 
+  const stats = useMemo(() => {
+    if (!data) return null;
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const todayEnd = new Date(todayStart.getTime() + 86_400_000);
+    const total = data.length;
+    const upcoming = data.filter((b) => new Date(b.start) >= now).length;
+    const today = data.filter((b) => {
+      const d = new Date(b.start);
+      return d >= todayStart && d < todayEnd;
+    }).length;
+    const types = new Set(data.map((b) => b.eventTypeId)).size;
+    return { total, upcoming, today, types };
+  }, [data]);
+
   return (
     <div>
       <div className="mb-6">
@@ -59,6 +85,31 @@ export function BookingsPage() {
           Все бронирования всех типов, по времени. Зона: {localTimeZone}
         </p>
       </div>
+
+      {stats && (
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard
+            icon={<ListChecks className="h-4 w-4" />}
+            label="Всего"
+            value={stats.total}
+          />
+          <StatCard
+            icon={<CalendarDays className="h-4 w-4" />}
+            label="Предстоит"
+            value={stats.upcoming}
+          />
+          <StatCard
+            icon={<User className="h-4 w-4" />}
+            label="Сегодня"
+            value={stats.today}
+          />
+          <StatCard
+            icon={<LayoutGrid className="h-4 w-4" />}
+            label="Типов"
+            value={stats.types}
+          />
+        </div>
+      )}
 
       {error && <ErrorBanner error={error} className="mb-4" />}
       {isLoading && <Spinner />}
@@ -135,5 +186,29 @@ export function BookingsPage() {
         loading={deleteMut.isPending}
       />
     </div>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number;
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+          {icon}
+        </span>
+        <div>
+          <p className="text-xs text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
